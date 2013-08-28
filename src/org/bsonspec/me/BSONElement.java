@@ -32,6 +32,8 @@ public class BSONElement {
 	public static final byte TYPE_TIMESTAMP = 0x11;
 	public static final byte TYPE_INT64 = 0x12;
 	
+	public static final BSONElement NULL = new BSONElement(null, null, TYPE_NULL);
+	
 	private final String key;
 	private final Object value;
 	private final byte type;
@@ -39,7 +41,7 @@ public class BSONElement {
 	public BSONElement(String key, Object value, byte type) {
 		this.key = key;
 		this.value = value;
-		this.type = type;		
+		this.type = value != null ? type : TYPE_NULL;		
 	}
 	
 	public String getKey() {
@@ -55,7 +57,11 @@ public class BSONElement {
 	}
 	
 	public String toString() {
-		return value.toString();
+		return ""+value;
+	}
+	
+	public boolean isNull() {
+		return this.type == TYPE_NULL;
 	}
 	
 	public boolean isType(int type) {
@@ -76,18 +82,18 @@ public class BSONElement {
         throw new BSONException("BSONElement [" + key + "] is not a number.");
     }
 
-	public BSONDocument getDocument() throws BSONException {
+	public BSONDocument getBSONDocument() throws BSONException {
         if (isType(TYPE_DOCUMENT)) {
             return (BSONDocument)value;
         }
-        throw new BSONException("BSONElement [" + key + "] is not a JSONObject.");
+        throw new BSONException("BSONElement [" + key + "] is not a BSONObject.");
 	}
 
-	public BSONArray getArray() throws BSONException {
+	public BSONArray getBSONArray() throws BSONException {
         if (isType(TYPE_ARRAY)) {
             return (BSONArray)value;
         }
-        throw new BSONException("BSONElement [" + key + "] is not a JSONArray.");
+        throw new BSONException("BSONElement [" + key + "] is not a BSONArray.");
 	}
 
 	public int getInt() throws BSONException {
@@ -128,6 +134,13 @@ public class BSONElement {
 	        }
 		}
         throw new BSONException("BSONElement [" + key + "] is not a Boolean.");
+	}
+
+	public String getString() throws BSONException  {
+		if (isType(TYPE_STRING)) {
+			return (String) value;
+		}
+        throw new BSONException("BSONElement [" + key + "] is not a String.");
 	}
 	
 }

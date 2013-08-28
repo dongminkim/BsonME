@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.Enumeration;
 import java.util.Hashtable;
-import java.util.Vector;
+
 
 /**
  * A BSONDocument is an unordered collection of name/value pairs. The internal form
@@ -51,85 +51,21 @@ import java.util.Vector;
  * @version 1
  */
 public class BSONDocument {
-    /**
-     * JSONObject.NULL is equivalent to the value that JavaScript calls null,
-     * whilst Java's null is equivalent to the value that JavaScript calls
-     * undefined.
-     */
-     private static final class Null {
-
-        /**
-         * There is only intended to be a single instance of the NULL object,
-         * so the clone method returns itself.
-         * @return     NULL.
-         */
-        protected final Object clone() {
-            return this;
-        }
-
-
-        /**
-         * A Null object is equal to the null value and to itself.
-         * @param object    An object to test for nullness.
-         * @return true if the object parameter is the JSONObject.NULL object
-         *  or null.
-         */
-        public boolean equals(Object object) {
-            return object == null || object == this;
-        }
-
-
-        /**
-         * Get the "null" string value.
-         * @return The string "null".
-         */
-        public String toString() {
-            return "null";
-        }
-    }
-
 
     /**
-     * The hash map where the JSONObject's properties are kept.
+     * The hash map where the BSONDocument's properties are kept.
      */
     private Hashtable myHashMap;
 
-
     /**
-     * It is sometimes more convenient and less ambiguous to have a
-     * <code>NULL</code> object than to use Java's <code>null</code> value.
-     * <code>JSONObject.NULL.equals(null)</code> returns <code>true</code>.
-     * <code>JSONObject.NULL.toString()</code> returns <code>"null"</code>.
-     */
-    public static final Object NULL = new Null();
-
-    /**
-     * Construct an empty JSONObject.
+     * Construct an empty BSONDocument.
      */
     public BSONDocument() {
         this.myHashMap = new Hashtable();
     }
 
-
-//#ifdef PRODUCER
-//#     /**
-//#      * Construct a JSONObject from a subset of another JSONObject.
-//#      * An array of strings is used to identify the keys that should be copied.
-//#      * Missing keys are ignored.
-//#      * @param jo A JSONObject.
-//#      * @param sa An array of strings.
-//#      * @exception JSONException If a value is a non-finite number.
-//#      */
-//#     public JSONObject(JSONObject jo, String[] sa) throws JSONException {
-//#         this();
-//#         for (int i = 0; i < sa.length; i += 1) {
-//#             putOpt(sa[i], jo.opt(sa[i]));
-//#         }
-//#     }
-//#endif
-
     /**
-     * Construct a JSONObject from a JSONTokener.
+     * Construct a BSONDocument from a JSONTokener.
      * @param x A JSONTokener object containing the source string.
      * @throws BSONException If there is a syntax error in the source string.
      */
@@ -150,35 +86,14 @@ public class BSONDocument {
         	
             put(e.getKey(), e);
         }
-    }
-
-
-//#ifdef PRODUCER
-//#     /**
-//#      * Construct a JSONObject from a Map.
-//#      * @param map A map object that can be used to initialize the contents of
-//#      *  the JSONObject.
-//#      */
-//#     public JSONObject(Hashtable map) {
-//#         if (map == null) {
-//#             this.myHashMap = new Hashtable();
-//#         } else {
-//#             this.myHashMap = new Hashtable(map.size());
-//#             Enumeration keys = map.keys();
-//#             while (keys.hasMoreElements()) {
-//#                 Object key = keys.nextElement();
-//#                 this.myHashMap.put(key, map.get(key));
-//#             }
-//#         }
-//#     }
-//#endif    
+    }  
     
     /**
-     * Construct a JSONObject from a string.
-     * This is the most commonly used JSONObject constructor.
-     * @param string    A string beginning
-     *  with <code>{</code>&nbsp;<small>(left brace)</small> and ending
-     *  with <code>}</code>&nbsp;<small>(right brace)</small>.
+     * Construct a BSONDocument from a string.
+     * This is the most commonly used BSONDocument constructor.
+//     * @param string    A string beginning
+//     *  with <code>{</code>&nbsp;<small>(left brace)</small> and ending
+//     *  with <code>}</code>&nbsp;<small>(right brace)</small>.
      * @exception BSONException If there is a syntax error in the source string.
      */
     public BSONDocument(byte[] data) throws BSONException {
@@ -189,59 +104,6 @@ public class BSONDocument {
         this(new BSONTokener(data, offset, length));    	
     }
 
-    /**
-     * Accumulate values under a key. It is similar to the put method except
-     * that if there is already an object stored under the key then a
-     * JSONArray is stored under the key to hold all of the accumulated values.
-     * If there is already a JSONArray, then the new value is appended to it.
-     * In contrast, the put method replaces the previous value.
-     * @param key   A key string.
-     * @param value An object to be accumulated under the key.
-     * @return this.
-     * @throws BSONException If the value is an invalid number
-     *  or if the key is null.
-     */
-    public BSONDocument accumulate(String key, Object value)
-            throws BSONException {
-        testValidity(value);
-        Object o = opt(key);
-        if (o == null) {
-            put(key, value);
-        } else if (o instanceof BSONArray) {
-            ((BSONArray)o).put(value);
-        } else {
-            put(key, new BSONArray().put(o).put(value));
-        }
-        return this;
-    }
-
-//#ifdef PRODUCER
-//#     /**
-//#      * Append values to the array under a key. If the key does not exist in the
-//#      * JSONObject, then the key is put in the JSONObject with its value being a
-//#      * JSONArray containing the value parameter. If the key was already
-//#      * associated with a JSONArray, then the value parameter is appended to it.
-//#      * @param key   A key string.
-//#      * @param value An object to be accumulated under the key.
-//#      * @return this.
-//#      * @throws JSONException If the key is null or if the current value 
-//#      * 	associated with the key is not a JSONArray.
-//#      */
-//#     public JSONObject append(String key, Object value)
-//#             throws JSONException {
-//#         testValidity(value);
-//#         Object o = opt(key);
-//#         if (o == null) {
-//#             put(key, new JSONArray().put(value));
-//#         } else if (o instanceof JSONArray) {
-//#             throw new JSONException("JSONObject[" + key + 
-//#             		"] is not a JSONArray.");
-//#         } else {
-//#             put(key, new JSONArray().put(o).put(value));
-//#         }
-//#         return this;
-//#     }
-//#endif
 
     /**
      * Produce a string from a double. The string "null" will be returned if
@@ -270,19 +132,27 @@ public class BSONDocument {
 
     /**
      * Get the value object associated with a key.
+     * If the key doesn't exist, then return null.
+     * If the value object is NULL, return null.
+     * @param key   A key string.
+     * @return      The object associated with the key.
+     */
+    public Object get(String key) {
+    	return opt(key).getValue();
+    }
+    
+    
+    /**
+     * Get the value object associated with a key.
      *
      * @param key   A key string.
      * @return      The object associated with the key.
      * @throws   BSONException if the key is not found.
      */
-    public Object get(String key) throws BSONException {
-    	return getElement(key).getValue();
-    }
-    
     protected BSONElement getElement(String key) throws BSONException {
     	BSONElement o = opt(key);
-        if (o == null) {
-            throw new BSONException("JSONObject[" + quote(key) +
+        if (o.isNull()) {
+            throw new BSONException("BSONDocument[" + quote(key) +
                     "] not found.");
         }
         return o;
@@ -306,7 +176,7 @@ public class BSONDocument {
      * Get the double value associated with a key.
      * @param key   A key string.
      * @return      The numeric value.
-     * @throws JSONException if the key is not found or
+     * @throws BSONException if the key is not found or
      *  if the value is not a Number object and cannot be converted to a number.
      */
     public double getDouble(String key) throws BSONException {
@@ -331,29 +201,29 @@ public class BSONDocument {
 
 
     /**
-     * Get the JSONArray value associated with a key.
+     * Get the BSONArray value associated with a key.
      *
      * @param key   A key string.
-     * @return      A JSONArray which is the value.
+     * @return      A BSONArray which is the value.
      * @throws   BSONException if the key is not found or
-     *  if the value is not a JSONArray.
+     *  if the value is not a BSONArray.
      */
-    public BSONArray getArray(String key) throws BSONException {
+    public BSONArray getBSONArray(String key) throws BSONException {
     	BSONElement o = getElement(key);
-    	return o.getArray();
+    	return o.getBSONArray();
     }
 
     /**
-     * Get the JSONObject value associated with a key.
+     * Get the BSONDocument value associated with a key.
      *
      * @param key   A key string.
-     * @return      A JSONObject which is the value.
+     * @return      A BSONDocument which is the value.
      * @throws   BSONException if the key is not found or
-     *  if the value is not a JSONObject.
+     *  if the value is not a BSONDocument.
      */
-    public BSONDocument getDocument(String key) throws BSONException {
+    public BSONDocument getBSONDocument(String key) throws BSONException {
         BSONElement o = getElement(key);
-        return o.getDocument();
+        return o.getBSONDocument();
     }
 
     /**
@@ -382,9 +252,9 @@ public class BSONDocument {
     }
 
     /**
-     * Determine if the JSONObject contains a specific key.
+     * Determine if the BSONDocument contains a specific key.
      * @param key   A key string.
-     * @return      true if the key exists in the JSONObject.
+     * @return      true if the key exists in the BSONDocument.
      */
     public boolean has(String key) {
         return this.myHashMap.containsKey(key);
@@ -396,15 +266,15 @@ public class BSONDocument {
      *  no value.
      * @param key   A key string.
      * @return      true if there is no value associated with the key or if
-     *  the value is the JSONObject.NULL object.
+     *  the value is the BSONDocument.NULL object.
      */
     public boolean isNull(String key) {
-        return BSONDocument.NULL.equals(opt(key));
+        return opt(key).isNull();
     }
 
 
     /**
-     * Get an enumeration of the keys of the JSONObject.
+     * Get an enumeration of the keys of the BSONDocument.
      *
      * @return An iterator of the keys.
      */
@@ -414,9 +284,9 @@ public class BSONDocument {
 
 
     /**
-     * Get the number of keys stored in the JSONObject.
+     * Get the number of keys stored in the BSONDocument.
      *
-     * @return The number of keys in the JSONObject.
+     * @return The number of keys in the BSONDocument.
      */
     public int length() {
         return this.myHashMap.size();
@@ -424,18 +294,19 @@ public class BSONDocument {
 
 
     /**
-     * Produce a JSONArray containing the names of the elements of this
-     * JSONObject.
-     * @return A JSONArray containing the key strings, or null if the JSONObject
+     * Produce a BSONArray containing the names of the elements of this
+     * BSONDocument.
+     * @return A BSONArray containing the key strings, or null if the BSONDocument
      * is empty.
+     * @throws BSONException 
      */
-    public BSONArray names() {
-        BSONArray ja = new BSONArray();
-        Enumeration  keys = keys();
+    public BSONArray names() throws BSONException {
+        BSONArray array = new BSONArray();
+        Enumeration keys = keys();
         while (keys.hasMoreElements()) {
-            ja.put(keys.nextElement());
+            array.put((String) keys.nextElement());
         }
-        return ja.length() == 0 ? null : ja;
+        return array.length() == 0 ? null : array;
     }
 
     
@@ -475,7 +346,9 @@ public class BSONDocument {
      * @return      An object which is the value, or null if there is no value.
      */
     public BSONElement opt(String key) {
-        return key == null ? null : (BSONElement)this.myHashMap.get(key);
+    	if (myHashMap.containsKey(key))
+    		return (BSONElement) this.myHashMap.get(key);
+    	return BSONElement.NULL;
     }
 
 
@@ -507,20 +380,6 @@ public class BSONDocument {
         } catch (Exception e) {
             return defaultValue;
         }
-    }
-
-    
-    /**
-     * Put a key/value pair in the JSONObject, where the value will be a
-     * JSONArray which is produced from a Collection.
-     * @param key 	A key string.
-     * @param value	A Collection value.
-     * @return		this.
-     * @throws BSONException
-     */
-    public BSONDocument put(String key, Vector value) throws BSONException {
-        put(key, new BSONArray(value));
-        return this;
     }
 
     
@@ -590,30 +449,36 @@ public class BSONDocument {
 
 
     /**
-     * Get an optional JSONArray associated with a key.
+     * Get an optional BSONArray associated with a key.
      * It returns null if there is no such key, or if its value is not a
-     * JSONArray.
+     * BSONArray.
      *
      * @param key   A key string.
-     * @return      A JSONArray which is the value.
+     * @return      A BSONArray which is the value.
      */
-    public BSONArray optJSONArray(String key) {
-        BSONElement o = opt(key);
-        return o.isType(BSONElement.TYPE_ARRAY) ? (BSONArray)o.getValue() : null;
+    public BSONArray optBSONArray(String key) {
+        try {
+			return opt(key).getBSONArray();
+		} catch (BSONException e) {
+			return null;
+		}
     }
 
 
     /**
-     * Get an optional JSONObject associated with a key.
+     * Get an optional BSONDocument associated with a key.
      * It returns null if there is no such key, or if its value is not a
-     * JSONObject.
+     * BSONDocument.
      *
      * @param key   A key string.
-     * @return      A JSONObject which is the value.
+     * @return      A BSONObject which is the value.
      */
-    public BSONDocument optJSONObject(String key) {
-        BSONElement o = opt(key);
-        return o.isType(BSONElement.TYPE_DOCUMENT) ? (BSONDocument)o.getValue() : null;
+    public BSONDocument optBSONObject(String key) {
+        try {
+			return opt(key).getBSONDocument();
+		} catch (BSONException e) {
+			return null;
+		}
     }
 
 
@@ -672,13 +537,16 @@ public class BSONDocument {
      * @return      A string which is the value.
      */
     public String optString(String key, String defaultValue) {
-        Object o = opt(key);
-        return o != null ? o.toString() : defaultValue;
+    	try {
+			return opt(key).getString();
+		} catch (BSONException e) {
+			return defaultValue;
+		}
     }
 
 
     /**
-     * Put a key/boolean pair in the JSONObject.
+     * Put a key/boolean pair in the BSONDocument.
      *
      * @param key   A key string.
      * @param value A boolean which is the value.
@@ -690,24 +558,8 @@ public class BSONDocument {
         return this;
     }
 
-
-//#if CLDC!="1.0"
-//#     /**
-//#      * Put a key/double pair in the JSONObject.
-//#      *
-//#      * @param key   A key string.
-//#      * @param value A double which is the value.
-//#      * @return this.
-//#      * @throws JSONException If the key is null or if the number is invalid.
-//#      */
-//#     public JSONObject put(String key, double value) throws JSONException {
-//#         put(key, new Double(value));
-//#         return this;
-//#     }
-//#endif
-
     /**
-     * Put a key/int pair in the JSONObject.
+     * Put a key/int pair in the BSONDocument.
      *
      * @param key   A key string.
      * @param value An int which is the value.
@@ -721,7 +573,7 @@ public class BSONDocument {
 
 
     /**
-     * Put a key/long pair in the JSONObject.
+     * Put a key/long pair in the BSONDocument.
      *
      * @param key   A key string.
      * @param value A long which is the value.
@@ -732,38 +584,58 @@ public class BSONDocument {
         put(key, new BSONElement(key, new Long(value), BSONElement.TYPE_INT64));
         return this;
     }
-
-     
-//#ifdef PRODUCER
-//#     /**
-//#      * Put a key/value pair in the JSONObject, where the value will be a
-//#      * JSONObject which is produced from a Map.
-//#      * @param key 	A key string.
-//#      * @param value	A Map value.
-//#      * @return		this.
-//#      * @throws JSONException
-//#      */
-//#     public JSONObject put(String key, Hashtable value) throws JSONException {
-//#         put(key, new JSONObject(value));
-//#         return this;
-//#     }
-//#endif    
-    
+  
     /**
-     * Put a key/value pair in the JSONObject. If the value is null,
-     * then the key will be removed from the JSONObject if it is present.
+     * Put a key/String pair in the BSONDocument.
+     *
+     * @param key   A key string.
+     * @param value A String which is the value.
+     * @return this.
+     * @throws BSONException If the key is null.
+     */
+	public BSONDocument put(String key, String value) throws BSONException {
+        put(key, new BSONElement(key, value, BSONElement.TYPE_STRING));
+        return this;
+	}
+	  
+    /**
+     * Put a key/BSONDocument pair in the BSONDocument.
+     *
+     * @param key   A key string.
+     * @param value A String which is the value.
+     * @return this.
+     * @throws BSONException If the key is null.
+     */
+	public BSONDocument put(String key, BSONDocument value) throws BSONException {
+        put(key, new BSONElement(key, value, BSONElement.TYPE_DOCUMENT));
+        return this;
+	}
+	  
+    /**
+     * Put a key/BSONArray pair in the BSONDocument.
+     *
+     * @param key   A key string.
+     * @param value A String which is the value.
+     * @return this.
+     * @throws BSONException If the key is null.
+     */
+	public BSONDocument put(String key, BSONArray value) throws BSONException {
+        put(key, new BSONElement(key, value, BSONElement.TYPE_ARRAY));
+        return this;
+	}
+        
+    /**
+     * Put a key/value pair in the BSONDocument. If the value is null,
+     * then the key will be removed from the BSONDocument if it is present.
      * @param key   A key string.
      * @param value An object which is the value. It should be of one of these
-     *  types: Boolean, Double, Integer, JSONArray, JSONObject, Long, String,
-     *  or the JSONObject.NULL object.
+     *  types: Boolean, Double, Integer, BSONArray, BSONDocument, Long, String,
+     *  or the BSONDocument.NULL object.
      * @return this.
      * @throws BSONException If the value is non-finite number
      *  or if the key is null.
      */
-    public BSONDocument put(String key, Object value) throws BSONException {
-        if (key == null) {
-            throw new BSONException("Null key.");
-        }
+    public BSONDocument put(String key, BSONElement value) throws BSONException {
         if (value != null) {
             testValidity(value);
             this.myHashMap.put(key, value);
@@ -774,16 +646,16 @@ public class BSONDocument {
     }
 
     /**
-     * Put a key/value pair in the JSONObject, but only if the
+     * Put a key/value pair in the BSONDocument, but only if the
      * key and the value are both non-null.
      * @param key   A key string.
      * @param value An object which is the value. It should be of one of these
-     *  types: Boolean, Double, Integer, JSONArray, JSONObject, Long, String,
-     *  or the JSONObject.NULL object.
+     *  types: Boolean, Double, Integer, BSONArray, BSONDocument, Long, String,
+     *  or the BSONDocument.NULL object.
      * @return this.
      * @throws BSONException If the value is a non-finite number.
      */
-    public BSONDocument putOpt(String key, Object value) throws BSONException {
+    public BSONDocument putOpt(String key, BSONElement value) throws BSONException {
         if (key != null && value != null) {
             put(key, value);
         }
@@ -886,14 +758,14 @@ public class BSONDocument {
     }
 
     /**
-     * Produce a JSONArray containing the values of the members of this
-     * JSONObject.
-     * @param names A JSONArray containing a list of key strings. This
+     * Produce a BSONArray containing the values of the members of this
+     * BSONDocument.
+     * @param names A BSONArray containing a list of key strings. This
      * determines the sequence of the values in the result.
-     * @return A JSONArray of values.
+     * @return A BSONArray of values.
      * @throws BSONException If any of the values are non-finite numbers.
      */
-    public BSONArray toJSONArray(BSONArray names) throws BSONException {
+    public BSONArray toBSONArray(BSONArray names) throws BSONException {
         if (names == null || names.length() == 0) {
             return null;
         }
@@ -905,7 +777,7 @@ public class BSONDocument {
     }
 
     /**
-     * Make a JSON text of this JSONObject. For compactness, no whitespace
+     * Make a JSON text of this BSONDocument. For compactness, no whitespace
      * is added. If this would not result in a syntactically correct JSON text,
      * then null will be returned instead.
      * <p>
@@ -939,7 +811,7 @@ public class BSONDocument {
 
 
     /**
-     * Make a prettyprinted JSON text of this JSONObject.
+     * Make a prettyprinted JSON text of this BSONDocument.
      * <p>
      * Warning: This method assumes that the data structure is acyclical.
      * @param indentFactor The number of spaces to add to each level of
@@ -956,7 +828,7 @@ public class BSONDocument {
 
 
     /**
-     * Make a prettyprinted JSON text of this JSONObject.
+     * Make a prettyprinted JSON text of this BSONDocument.
      * <p>
      * Warning: This method assumes that the data structure is acyclical.
      * @param indentFactor The number of spaces to add to each level of
@@ -1053,6 +925,18 @@ public class BSONDocument {
                 value instanceof BSONArray) {
             return value.toString();
         }
+        if (value instanceof BSONElement) {
+        	/**
+        	 * @author Diego
+        	 */
+        	BSONElement el = (BSONElement) value;
+        	if (el.isType(BSONElement.TYPE_DOCUMENT) || el.isType(BSONElement.TYPE_ARRAY) ||
+        		el.isType(BSONElement.TYPE_NULL) ||	el.isType(BSONElement.TYPE_BOOLEAN) ||
+       			el.isType(BSONElement.TYPE_INT32) || el.isType(BSONElement.TYPE_INT64) ||
+        		el.isType(BSONElement.TYPE_DATETIME) || el.isType(BSONElement.TYPE_TIMESTAMP)) {
+        		return el.toString();
+        	}
+        }
         return quote(value.toString());
     }
 
@@ -1086,11 +970,7 @@ public class BSONDocument {
         } catch (Exception e) {
         	/* forget about it */
         }
-//#if CLDC!="1.0"
-//#         if (value instanceof Float || value instanceof Double ||
-//#else
-        if (
-//#endif
+        if (value instanceof Float || value instanceof Double ||
             value instanceof Byte || value instanceof Short || 
             value instanceof Integer || value instanceof Long) {
             return numberToString(value);
@@ -1104,12 +984,24 @@ public class BSONDocument {
         if (value instanceof BSONArray) {
             return ((BSONArray)value).toString(indentFactor, indent);
         }
+        if (value instanceof BSONElement) {
+        	/**
+        	 * @author Diego
+        	 */
+        	BSONElement el = (BSONElement) value;
+        	if (el.isType(BSONElement.TYPE_DOCUMENT) || el.isType(BSONElement.TYPE_ARRAY) ||
+           		el.isType(BSONElement.TYPE_NULL) ||	el.isType(BSONElement.TYPE_BOOLEAN) ||
+          		el.isType(BSONElement.TYPE_INT32) || el.isType(BSONElement.TYPE_INT64) ||
+           		el.isType(BSONElement.TYPE_DATETIME) || el.isType(BSONElement.TYPE_TIMESTAMP)) {
+           		return el.toString();
+        	}
+        }
         return quote(value.toString());
     }
 
 
      /**
-      * Write the contents of the JSONObject as JSON text to a writer.
+      * Write the contents of the BSONDocument as JSON text to a writer.
       * For compactness, no whitespace is added.
       * <p>
       * Warning: This method assumes that the data structure is acyclical.
@@ -1146,4 +1038,5 @@ public class BSONDocument {
             throw new BSONException(e);
         }
      }
+
 }

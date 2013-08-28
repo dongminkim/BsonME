@@ -72,20 +72,20 @@ public class BSONArray {
 
 
     /**
-     * The Vector where the JSONArray's properties are kept.
+     * The Vector where the BSONArray's properties are kept.
      */
     private Vector myArrayList;
 
 
     /**
-     * Construct an empty JSONArray.
+     * Construct an empty BSONArray.
      */
     public BSONArray() {
         this.myArrayList = new Vector();
     }
 
     /**
-     * Construct a JSONArray from a JSONTokener.
+     * Construct a BSONArray from a JSONTokener.
      * @param x A JSONTokener
      * @throws BSONException If there is a syntax error.
      */
@@ -108,8 +108,8 @@ public class BSONArray {
 
 
     /**
-     * Construct a JSONArray from a source sJSON text.
-     * @param string     A string that begins with
+     * Construct a BSONArray from a source sJSON text.
+//     * @param string     A string that begins with
      * <code>[</code>&nbsp;<small>(left bracket)</small>
      *  and ends with <code>]</code>&nbsp;<small>(right bracket)</small>.
      *  @throws BSONException If there is a syntax error.
@@ -120,7 +120,7 @@ public class BSONArray {
 
 
     /**
-     * Construct a JSONArray from a Collection.
+     * Construct a BSONArray from a Collection.
      * @param collection     A Collection.
      */
     public BSONArray(Vector collection) {
@@ -145,7 +145,7 @@ public class BSONArray {
     private BSONElement getElement(int index) throws BSONException {
         BSONElement o = opt(index);
         if (o == null) {
-            throw new BSONException("JSONArray[" + index + "] not found.");
+            throw new BSONException("BSONArray[" + index + "] not found.");
         }
         return o;
     }
@@ -180,7 +180,7 @@ public class BSONArray {
       *
       * @param index The index must be between 0 and length() - 1.
       * @return      The value.
-      * @throws   JSONException If the key is not found or if the value cannot
+      * @throws   BSONException If the key is not found or if the value cannot
       *  be converted to a number.
       */
      public double getDouble(int index) throws BSONException {
@@ -194,7 +194,7 @@ public class BSONArray {
       *
       * @param index The index must be between 0 and length() - 1.
       * @return      The value.
-      * @throws   JSONException If the key is not found or if the value cannot
+      * @throws   BSONException If the key is not found or if the value cannot
       *  be converted to a number.
       *  if the value cannot be converted to a number.
       */
@@ -205,36 +205,28 @@ public class BSONArray {
 
 
     /**
-     * Get the JSONArray associated with an index.
+     * Get the BSONArray associated with an index.
      * @param index The index must be between 0 and length() - 1.
-     * @return      A JSONArray value.
+     * @return      A BSONArray value.
      * @throws BSONException If there is no value for the index. or if the
-     * value is not a JSONArray
+     * value is not a BSONArray
      */
-    public BSONArray getArray(int index) throws BSONException {
+    public BSONArray getBSONArray(int index) throws BSONException {
         BSONElement o = getElement(index);
-        if (o.getType() == BSONElement.TYPE_ARRAY) {
-            return (BSONArray)o.getValue();
-        }
-        throw new BSONException("JSONArray[" + index +
-                "] is not a JSONArray.");
+        return o.getBSONArray();
     }
 
 
     /**
-     * Get the JSONObject associated with an index.
+     * Get the BSONDocument associated with an index.
      * @param index subscript
-     * @return      A JSONObject value.
+     * @return      A BSONDocument value.
      * @throws BSONException If there is no value for the index or if the
-     * value is not a JSONObject
+     * value is not a BSONDocument
      */
-    public BSONDocument getDocument(int index) throws BSONException {
+    public BSONDocument getBSONDocument(int index) throws BSONException {
     	BSONElement o = getElement(index);
-        if (o.getType() == BSONElement.TYPE_DOCUMENT) {
-            return (BSONDocument)o.getValue();
-        }
-        throw new BSONException("JSONArray[" + index +
-            "] is not a JSONObject.");
+    	return o.getBSONDocument();
     }
 
 
@@ -243,7 +235,7 @@ public class BSONArray {
       *
       * @param index The index must be between 0 and length() - 1.
       * @return      The value.
-      * @throws   JSONException If the key is not found or if the value cannot
+      * @throws   BSONException If the key is not found or if the value cannot
       *  be converted to a number.
       */
      public long getLong(int index) throws BSONException {
@@ -268,12 +260,12 @@ public class BSONArray {
      * @return true if the value at the index is null, or if there is no value.
      */
     public boolean isNull(int index) {
-        return BSONDocument.NULL.equals(opt(index));
+        return opt(index).isNull();
     }
 
 
     /**
-     * Make a string from the contents of this JSONArray. The
+     * Make a string from the contents of this BSONArray. The
      * <code>separator</code> string is inserted between each element.
      * Warning: This method assumes that the data structure is acyclical.
      * @param separator A string that will be inserted between the elements.
@@ -295,7 +287,7 @@ public class BSONArray {
 
 
     /**
-     * Get the number of elements in the JSONArray, included nulls.
+     * Get the number of elements in the BSONArray, included nulls.
      *
      * @return The length (or size).
      */
@@ -311,8 +303,9 @@ public class BSONArray {
      *              object at that index.
      */
     public BSONElement opt(int index) {
-        return (index < 0 || index >= length()) ?
-            null : (BSONElement) this.myArrayList.elementAt(index);
+    	if (index < 0 || index >= length())
+        	return BSONElement.NULL;
+    	return (BSONElement) this.myArrayList.elementAt(index);
     }
 
     /**
@@ -402,28 +395,34 @@ public class BSONArray {
     }
 
     /**
-     * Get the optional JSONArray associated with an index.
+     * Get the optional BSONArray associated with an index.
      * @param index subscript
-     * @return      A JSONArray value, or null if the index has no value,
-     * or if the value is not a JSONArray.
+     * @return      A BSONArray value, or null if the index has no value,
+     * or if the value is not a BSONArray.
      */
-    public BSONArray optArray(int index) {
-        BSONElement o = opt(index);
-        return o.isType(BSONElement.TYPE_ARRAY) ? (BSONArray)o.getValue() : null;
+    public BSONArray optBSONArray(int index) {
+        try {
+			return opt(index).getBSONArray();
+		} catch (BSONException e) {
+			return null;
+		}
     }
 
 
     /**
-     * Get the optional JSONObject associated with an index.
+     * Get the optional BSONDocument associated with an index.
      * Null is returned if the key is not found, or null if the index has
-     * no value, or if the value is not a JSONObject.
+     * no value, or if the value is not a BSONDocument.
      *
      * @param index The index must be between 0 and length() - 1.
-     * @return      A JSONObject value.
+     * @return      A BSONDocument value.
      */
     public BSONDocument optBSONDocument(int index) {
-    	BSONElement o = opt(index);
-        return o.isType(BSONElement.TYPE_DOCUMENT) ? (BSONDocument)o.getValue() : null;
+        try {
+   			return opt(index).getBSONDocument();
+   		} catch (BSONException e) {
+   			return null;
+   		}
     }
 
     /**
@@ -476,8 +475,11 @@ public class BSONArray {
      * @return      A String value.
      */
     public String optString(int index, String defaultValue) {
-    	BSONElement o = opt(index);
-        return o != null ? o.getValue().toString() : defaultValue;
+    	try {
+			return opt(index).getString();
+		} catch (BSONException e) {
+			return defaultValue;
+		}
     }
 
 
@@ -486,23 +488,13 @@ public class BSONArray {
      *
      * @param value A boolean value.
      * @return this.
+     * @throws BSONException 
      */
-    public BSONArray put(boolean value) {
+    public BSONArray put(boolean value) throws BSONException {
         put(new BSONElement(Integer.toString(this.myArrayList.size()), value ? Boolean.TRUE : Boolean.FALSE, BSONElement.TYPE_BOOLEAN));
         return this;
     }
 
-    /**
-     * Put a value in the JSONArray, where the value will be a
-     * JSONArray which is produced from a Collection.
-     * @param value	A Collection value.
-     * @return		this.
-     */
-    public BSONArray put(Vector value) {
-        put(new BSONElement(Integer.toString(this.myArrayList.size()), new BSONArray(value), BSONElement.TYPE_ARRAY));
-        return this;
-    }
-    
 
 //#if CLDC!="1.0"
 //#     /**
@@ -512,9 +504,9 @@ public class BSONArray {
 //#      * @throws JSONException if the value is not finite.
 //#      * @return this.
 //#      */
-//#     public JSONArray put(double value) throws JSONException {
+//#     public BSONArray put(double value) throws JSONException {
 //#         Double d = new Double(value);
-//#         JSONObject.testValidity(d);
+//#         BSONDocument.testValidity(d);
 //#         put(d);
 //#         return this;
 //#     }
@@ -525,8 +517,9 @@ public class BSONArray {
      *
      * @param value An int value.
      * @return this.
+     * @throws BSONException 
      */
-    public BSONArray put(int value) {
+    public BSONArray put(int value) throws BSONException {
         put(new BSONElement(Integer.toString(this.myArrayList.size()), new Integer(value), BSONElement.TYPE_INT32));
         return this;
     }
@@ -537,22 +530,64 @@ public class BSONArray {
      *
      * @param value A long value.
      * @return this.
+     * @throws BSONException 
      */
-    public BSONArray put(long value) {
+    public BSONArray put(long value) throws BSONException {
         put(new BSONElement(Integer.toString(this.myArrayList.size()), new Long(value), BSONElement.TYPE_INT64));
         return this;
     }
 
 
+    /**
+     * Append an String value. This increases the array's length by one.
+     *
+     * @param value A String value.
+     * @return this.
+     * @throws BSONException 
+     */
+    public BSONArray put(String value) throws BSONException {
+        put(new BSONElement(Integer.toString(this.myArrayList.size()), value, BSONElement.TYPE_STRING));
+        return this;
+    }
+
+    
+    /**
+     * Append an BSONDocument value. This increases the array's length by one.
+     *
+     * @param value A BSONDocument value.
+     * @return this.
+     * @throws BSONException 
+     */
+    public BSONArray put(BSONDocument value) throws BSONException {
+        put(new BSONElement(Integer.toString(this.myArrayList.size()), value, BSONElement.TYPE_DOCUMENT));
+        return this;
+    }
+
+    
+    /**
+     * Append an BSONArray value. This increases the array's length by one.
+     *
+     * @param value A BSONArray value.
+     * @return this.
+     * @throws BSONException 
+     */
+    public BSONArray put(BSONArray value) throws BSONException {
+        put(new BSONElement(Integer.toString(this.myArrayList.size()), value, BSONElement.TYPE_ARRAY));
+        return this;
+    }
+
+
+
+
 //#ifdef PRODUCER
 //#     /**
-//#      * Put a value in the JSONArray, where the value will be a
-//#      * JSONObject which is produced from a Map.
+//#      * Put a value in the BSONArray, where the value will be a
+//#      * BSONDocument which is produced from a Map.
 //#      * @param value	A Map value.
 //#      * @return		this.
 //#      */
-//#     public JSONArray put(Hashtable value) {
-//#         put(new JSONObject(value));
+//#     public BSONArray put(Hashtable value) {
+//#         put(new BSONDocument(value));
 //#         return this;
 //#     }
 //#endif    
@@ -560,19 +595,21 @@ public class BSONArray {
     /**
      * Append an object value. This increases the array's length by one.
      * @param value An object value.  The value should be a
-     *  Boolean, Double, Integer, JSONArray, JSONObject, Long, or String, or the
-     *  JSONObject.NULL object.
+     *  Boolean, Double, Integer, BSONArray, BSONDocument, Long, or String, or the
+     *  BSONDocument.NULL object.
      * @return this.
+     * @throws BSONException 
      */
-    public BSONArray put(Object value) {
+    public BSONArray put(BSONElement value) throws BSONException {
+        BSONDocument.testValidity(value);
         this.myArrayList.addElement(value);
         return this;
     }
 
 
     /**
-     * Put or replace a boolean value in the JSONArray. If the index is greater
-     * than the length of the JSONArray, then null elements will be added as
+     * Put or replace a boolean value in the BSONArray. If the index is greater
+     * than the length of the BSONArray, then null elements will be added as
      * necessary to pad it out.
      * @param index The subscript.
      * @param value A boolean value.
@@ -580,43 +617,29 @@ public class BSONArray {
      * @throws BSONException If the index is negative.
      */
     public BSONArray put(int index, boolean value) throws BSONException {
-        put(index, value ? Boolean.TRUE : Boolean.FALSE);
-        return this;
-    }
-    
-    /**
-     * Put a value in the JSONArray, where the value will be a
-     * JSONArray which is produced from a Collection.
-     * @param index The subscript.
-     * @param value	A Collection value.
-     * @return		this.
-     * @throws BSONException If the index is negative or if the value is
-     * not finite.
-     */
-    public BSONArray put(int index, Vector value) throws BSONException {
-        put(index, new BSONArray(value));
+        put(index, new BSONElement(""+index, value ? Boolean.TRUE : Boolean.FALSE, BSONElement.TYPE_BOOLEAN));
         return this;
     }
 
     
     /**
      * Put or replace a double value. If the index is greater than the length of
-     *  the JSONArray, then null elements will be added as necessary to pad
+     *  the BSONArray, then null elements will be added as necessary to pad
      *  it out.
      * @param index The subscript.
      * @param value A double value.
      * @return this.
-     * @throws JSONException If the index is negative or if the value is
+     * @throws BSONException If the index is negative or if the value is
      * not finite.
      */
     public BSONArray put(int index, double value) throws BSONException {
-        put(index, new Double(value));
+        put(index, new BSONElement(""+index, new Double(value), BSONElement.TYPE_INT32));
         return this;
     }
 
     /**
      * Put or replace an int value. If the index is greater than the length of
-     *  the JSONArray, then null elements will be added as necessary to pad
+     *  the BSONArray, then null elements will be added as necessary to pad
      *  it out.
      * @param index The subscript.
      * @param value An int value.
@@ -624,14 +647,14 @@ public class BSONArray {
      * @throws BSONException If the index is negative.
      */
     public BSONArray put(int index, int value) throws BSONException {
-        put(index, new Integer(value));
+        put(index, new BSONElement(""+index, new Integer(value), BSONElement.TYPE_INT32));
         return this;
     }
 
 
     /**
      * Put or replace a long value. If the index is greater than the length of
-     *  the JSONArray, then null elements will be added as necessary to pad
+     *  the BSONArray, then null elements will be added as necessary to pad
      *  it out.
      * @param index The subscript.
      * @param value A long value.
@@ -639,49 +662,95 @@ public class BSONArray {
      * @throws BSONException If the index is negative.
      */
     public BSONArray put(int index, long value) throws BSONException {
-        put(index, new Long(value));
+        put(index, new BSONElement(""+index, new Long(value), BSONElement.TYPE_INT64));
         return this;
     }
+    
+
+    /**
+     * Put or replace a String value. If the index is greater than the length of
+     *  the BSONArray, then null elements will be added as necessary to pad
+     *  it out.
+     * @param index The subscript.
+     * @param value A String value.
+     * @return this.
+     * @throws BSONException If the index is negative.
+     */
+    public BSONArray put(int index, String value) throws BSONException {
+        put(index, new BSONElement(""+index, value, BSONElement.TYPE_STRING));
+        return this;
+    }  
+    
+
+    /**
+     * Put or replace a BSONDocument value. If the index is greater than the length of
+     *  the BSONArray, then null elements will be added as necessary to pad
+     *  it out.
+     * @param index The subscript.
+     * @param value A BSONDocument value.
+     * @return this.
+     * @throws BSONException If the index is negative.
+     */
+    public BSONArray put(int index, BSONDocument value) throws BSONException {
+        put(index, new BSONElement(""+index, value, BSONElement.TYPE_DOCUMENT));
+        return this;
+    }
+    
+    
+    /**
+     * Put or replace a BSONArray value. If the index is greater than the length of
+     *  the BSONArray, then null elements will be added as necessary to pad
+     *  it out.
+     * @param index The subscript.
+     * @param value A BSONArray value.
+     * @return this.
+     * @throws BSONException If the index is negative.
+     */
+    public BSONArray put(int index, BSONArray value) throws BSONException {
+        put(index, new BSONElement(""+index, value, BSONElement.TYPE_ARRAY));
+        return this;
+    }
+    
 
 
 //#ifdef PRODUCER
 //#     /**
-//#      * Put a value in the JSONArray, where the value will be a
-//#      * JSONObject which is produced from a Map.
+//#      * Put a value in the BSONArray, where the value will be a
+//#      * BSONDocument which is produced from a Map.
 //#      * @param index The subscript.
 //#      * @param value	The Map value.
 //#      * @return		this.
 //#      * @throws JSONException If the index is negative or if the the value is
 //#      *  an invalid number.
 //#      */
-//#     public JSONArray put(int index, Hashtable value) throws JSONException {
-//#         put(index, new JSONObject(value));
+//#     public BSONArray put(int index, Hashtable value) throws JSONException {
+//#         put(index, new BSONDocument(value));
 //#         return this;
 //#     }
 //#endif    
     
     /**
-     * Put or replace an object value in the JSONArray. If the index is greater
-     *  than the length of the JSONArray, then null elements will be added as
+     * Put or replace an object value in the BSONArray. If the index is greater
+     *  than the length of the BSONArray, then null elements will be added as
      *  necessary to pad it out.
      * @param index The subscript.
      * @param value The value to put into the array. The value should be a
-     *  Boolean, Double, Integer, JSONArray, JSONObject, Long, or String, or the
-     *  JSONObject.NULL object.
+     *  Boolean, Double, Integer, BSONArray, BSONDocument, Long, or String, or the
+     *  BSONDocument.NULL object.
      * @return this.
      * @throws BSONException If the index is negative or if the the value is
      *  an invalid number.
      */
-    public BSONArray put(int index, Object value) throws BSONException {
+    public BSONArray put(int index, BSONElement value) throws BSONException {
         BSONDocument.testValidity(value);
         if (index < 0) {
-            throw new BSONException("JSONArray[" + index + "] not found.");
+            throw new BSONException("BSONArray[" + index + "] not found.");
         }
         if (index < length()) {
             this.myArrayList.setElementAt(value, index);
         } else {
             while (index != length()) {
-                put(BSONDocument.NULL);
+                put(BSONElement.NULL);
             }
             put(value);
         }
@@ -690,15 +759,15 @@ public class BSONArray {
 
 
     /**
-     * Produce a JSONObject by combining a JSONArray of names with the values
-     * of this JSONArray.
-     * @param names A JSONArray containing a list of key strings. These will be
+     * Produce a BSONDocument by combining a BSONArray of names with the values
+     * of this BSONArray.
+     * @param names A BSONArray containing a list of key strings. These will be
      * paired with the values.
-     * @return A JSONObject, or null if there are no names or if this JSONArray
+     * @return A BSONDocument, or null if there are no names or if this BSONArray
      * has no values.
      * @throws BSONException If any of the names are null.
      */
-    public BSONDocument toJSONObject(BSONArray names) throws BSONException {
+    public BSONDocument toBSONDocument(BSONArray names) throws BSONException {
         if (names == null || names.length() == 0 || length() == 0) {
             return null;
         }
@@ -711,7 +780,7 @@ public class BSONArray {
 
 
     /**
-     * Make a JSON text of this JSONArray. For compactness, no
+     * Make a JSON text of this BSONArray. For compactness, no
      * unnecessary whitespace is added. If it is not possible to produce a
      * syntactically correct JSON text then null will be returned instead. This
      * could occur if the array contains an invalid number.
@@ -731,7 +800,7 @@ public class BSONArray {
 
 
     /**
-     * Make a prettyprinted JSON text of this JSONArray.
+     * Make a prettyprinted JSON text of this BSONArray.
      * Warning: This method assumes that the data structure is acyclical.
      * @param indentFactor The number of spaces to add to each level of
      *  indentation.
@@ -747,7 +816,7 @@ public class BSONArray {
 
 
     /**
-     * Make a prettyprinted JSON text of this JSONArray.
+     * Make a prettyprinted JSON text of this BSONArray.
      * Warning: This method assumes that the data structure is acyclical.
      * @param indentFactor The number of spaces to add to each level of
      *  indentation.
@@ -790,7 +859,7 @@ public class BSONArray {
 
 
     /**
-     * Write the contents of the JSONArray as JSON text to a writer.
+     * Write the contents of the BSONArray as JSON text to a writer.
      * For compactness, no whitespace is added.
      * <p>
      * Warning: This method assumes that the data structure is acyclical.

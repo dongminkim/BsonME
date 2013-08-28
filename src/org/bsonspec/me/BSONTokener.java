@@ -152,9 +152,9 @@ public class BSONTokener {
      * Backslash processing is done. The formal JSON format does not
      * allow strings in single quotes, but an implementation is allowed to
      * accept them.
-     * @param quote The quoting character, either
-     *      <code>"</code>&nbsp;<small>(double quote)</small> or
-     *      <code>'</code>&nbsp;<small>(single quote)</small>.
+//     * @param quote The quoting character, either
+//     *      <code>"</code>&nbsp;<small>(double quote)</small> or
+//     *      <code>'</code>&nbsp;<small>(single quote)</small>.
      * @return      A String.
      * @throws BSONException Unterminated string.
      */
@@ -269,7 +269,7 @@ public class BSONTokener {
 				break;
 			}
 			case BSONElement.TYPE_NULL: {
-				value = BSONDocument.NULL;
+				value = BSONElement.NULL;
 				break;
 			}
 			case BSONElement.TYPE_ARRAY: {
