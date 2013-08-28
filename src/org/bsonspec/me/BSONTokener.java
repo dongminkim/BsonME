@@ -202,7 +202,7 @@ public class BSONTokener {
 	public int nextInt() {
 		int i = 0;
 		for (int idx = 0; idx < 4; idx++) {
-			i |= (int)((next() & 0xff) << (idx * 8));
+			i |= (int)((next() & (int)0xff) << (idx * 8));
 		}
 		return i;
 	}
@@ -210,7 +210,7 @@ public class BSONTokener {
 	public long nextLong() {
 		long l = 0;
 		for (int idx = 0; idx < 8; idx++) {
-			l |= (long)((next() & 0xff) << (idx * 8));
+			l |= (long)((next() & (long)0xff) << (idx * 8));
 		}
 		return l;
 	}	
@@ -276,12 +276,14 @@ public class BSONTokener {
 				int offset = myIndex;
 				int length = nextInt();
 				value = new BSONArray(mySource, offset, length);
+				myIndex = offset + length;
 				break;
 			}
 			case BSONElement.TYPE_DOCUMENT: {
 				int offset = myIndex;
 				int length = nextInt();
 				value = new BSONDocument(mySource, offset, length);
+				myIndex = offset + length;
 				break;
 			}				
 			default:
